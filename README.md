@@ -108,12 +108,16 @@ Using a venv keeps project dependencies separate from the rest of your system.
    - **macOS/Linux:** `source venv/bin/activate`
    You should see `(venv)` in the prompt.
 
-3. **Install dependencies**:
+3. **Install dependencies** (with venv activated):
    ```bash
    pip install -r requirements.txt
    ```
+   **Or on Windows, without activating the venv** (run from the project folder):
+   ```bash
+   .\venv\Scripts\python.exe -m pip install -r requirements.txt
+   ```
 
-4. **Run the app**:
+4. **Run the app** (with venv activated):
    ```bash
    streamlit run app.py
    ```
@@ -121,8 +125,12 @@ Using a venv keeps project dependencies separate from the rest of your system.
    ```bash
    python run_app.py
    ```
+   **Or on Windows, without activating the venv** (run from the project folder):
+   ```bash
+   .\venv\Scripts\python.exe -m streamlit run app.py
+   ```
 
-5. **Deactivate when done** (optional): `deactivate`
+5. **Deactivate when done** (optional, only if you activated the venv): `deactivate`
 
 ---
 
