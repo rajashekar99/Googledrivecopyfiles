@@ -12,13 +12,18 @@ def _tls12_context():
     return ctx
 ssl.create_default_context = _tls12_context
 
+import base64
+import io
 import streamlit as st
+import streamlit.components.v1 as components
 from drive_service import (
     get_drive_service,
     build_folder_paths,
     list_files_in_folder,
     resolve_names_to_file_ids,
     copy_file_to_folder,
+    get_file_metadata,
+    get_file_content,
     CREDENTIALS_PATH,
     TOKEN_PATH,
 )
@@ -177,6 +182,38 @@ def main():
 
     # For copy: matched list from browse selection (using option_to_file) or from typed names
     browse_matched = [option_to_file[opt] for opt in selected_options] if selected_options else []
+
+    # Preview: latest selected file (last in selection when using browse)
+    latest_for_preview = browse_matched[-1] if browse_matched else None
+    if latest_for_preview:
+        prev_file_id, prev_file_name = latest_for_preview
+        st.subheader("Preview: latest selected file")
+        try:
+            meta = get_file_metadata(service, prev_file_id)
+            mime = (meta.get("mimeType") or "").lower()
+            st.caption(f"**{prev_file_name}**")
+            if mime.startswith("image/"):
+                content = get_file_content(service, prev_file_id)
+                if content:
+                    st.image(io.BytesIO(content), use_container_width=True)
+                else:
+                    st.caption("Could not load image preview.")
+            elif mime == "application/pdf":
+                content = get_file_content(service, prev_file_id)
+                if content:
+                    b64 = base64.b64encode(content).decode()
+                    pdf_iframe = f'<iframe src="data:application/pdf;base64,{b64}" width="100%" height="500" type="application/pdf"></iframe>'
+                    components.html(pdf_iframe, height=520)
+                    st.caption("If the PDF does not appear above, use the link below.")
+                else:
+                    st.caption("Could not load PDF in-app.")
+                st.link_button("Open in Google Drive", f"https://drive.google.com/file/d/{prev_file_id}/preview", type="secondary")
+            else:
+                view_url = f"https://drive.google.com/file/d/{prev_file_id}/view"
+                st.link_button("Open in Google Drive", view_url, type="secondary")
+        except Exception as e:
+            st.caption(f"Preview unavailable: {e}")
+        st.divider()
 
     file_names_csv = st.text_area(
         "Or type file names (comma-separated)",

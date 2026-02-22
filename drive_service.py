@@ -281,6 +281,37 @@ def copy_file_to_folder(service, file_id, file_name, dest_folder_id):
     return result.get("id")
 
 
+def get_file_metadata(service, file_id):
+    """
+    Get metadata for a single file (name, mimeType, thumbnailLink).
+    Uses supportsAllDrives for shared-drive files.
+    """
+    try:
+        result = service.files().get(
+            fileId=file_id,
+            fields="id, name, mimeType, thumbnailLink",
+            supportsAllDrives=True,
+        ).execute()
+        return result
+    except HttpError as e:
+        raise
+
+
+def get_file_content(service, file_id):
+    """
+    Download file content as bytes. Use for preview (images, PDFs).
+    Returns None for Google Docs/Sheets/Slides (use export instead).
+    """
+    try:
+        content = service.files().get_media(
+            fileId=file_id,
+            supportsAllDrives=True,
+        ).execute()
+        return content
+    except HttpError as e:
+        raise
+
+
 def resolve_names_to_file_ids(service, folder_id, names):
     """
     Resolve a list of file names (trimmed) to (file_id, name) for files in the folder.
